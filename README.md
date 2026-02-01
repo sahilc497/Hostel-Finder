@@ -2,7 +2,7 @@
 
 StudentNest is a high-impact, industrial-themed web application designed for students of **DYPCET** to find and book hostels (PGs) near campus. The application features a unique **Brutalism UI** design, providing a sharp and powerful user experience.
 
-![Home Page Screenshot](assets/images/screenshot_home.png) *(Note: Add actual screenshot if available)*
+![Home Page Screenshot](assets/images/screenshot_home.png) 
 
 ## 🚀 Features
 
