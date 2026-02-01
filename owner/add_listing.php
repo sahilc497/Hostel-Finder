@@ -32,12 +32,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-    $stmt = $conn->prepare("INSERT INTO pg_listings (owner_id, name, address, city, gender_type, latitude, longitude, description, rules, amenities, status, rent, deposit, image, total_beds) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, ?, ?)");
-    if ($stmt->execute([$_SESSION['user_id'], $name, $address, $city, $gender_type, $latitude, $longitude, $description, $rules, $amenities, $rent, $deposit, $image_path, $total_beds])) {
+    $conn->beginTransaction();
+    try {
+        $stmt = $conn->prepare("INSERT INTO pg_listings (owner_id, name, address, city, gender_type, latitude, longitude, description, rules, amenities, status, rent, deposit, image, total_beds) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, ?, ?)");
+        $stmt->execute([$_SESSION['user_id'], $name, $address, $city, $gender_type, $latitude, $longitude, $description, $rules, $amenities, $rent, $deposit, $image_path, $total_beds]);
+        
+        $pg_id = $conn->lastInsertId();
+
+        // Multiple Images Upload
+        if (!empty($_FILES['more_images']['name'][0])) {
+            $target_dir = "../uploads/";
+            foreach ($_FILES['more_images']['name'] as $key => $img_name) {
+                if ($_FILES['more_images']['error'][$key] == 0) {
+                    $tmp_name = $_FILES['more_images']['tmp_name'][$key];
+                    $new_name = time() . "_extra_" . basename($img_name);
+                    $target_file = $target_dir . $new_name;
+                    if (move_uploaded_file($tmp_name, $target_file)) {
+                        $extra_image_path = "uploads/" . $new_name;
+                        $stmtImg = $conn->prepare("INSERT INTO pg_images (pg_id, image_path) VALUES (?, ?)");
+                        $stmtImg->execute([$pg_id, $extra_image_path]);
+                    }
+                }
+            }
+        }
+
+        $conn->commit();
         header("Location: dashboard.php");
         exit;
-    } else {
-        $error = "OPERATION FAILED. RETRY.";
+    } catch (Exception $e) {
+        $conn->rollBack();
+        $error = "OPERATION FAILED: " . $e->getMessage();
     }
 }
 ?>
@@ -105,9 +129,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">VISUAL INTEL (MAIN IMAGE)</label>
-                            <input type="file" name="image" class="form-control" accept="image/*" required>
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">PRIMARY INTEL (MAIN IMAGE)</label>
+                                <input type="file" name="image" class="form-control" accept="image/*" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">SUPPLEMENTARY INTEL (ADDITIONAL PHOTOS)</label>
+                                <input type="file" name="more_images[]" class="form-control" accept="image/*" multiple>
+                                <small class="text-muted">You can select multiple files.</small>
+                            </div>
                         </div>
                         
                         <div class="mb-4">

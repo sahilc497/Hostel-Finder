@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $deposit = !empty($_POST['deposit']) ? $_POST['deposit'] : 0;
     $total_beds = !empty($_POST['total_beds']) ? $_POST['total_beds'] : 10;
 
-    // Handle Image Update
+    // Handle Main Image Update
     if (!empty($_FILES['image']['name'])) {
         $target_dir = "../uploads/";
         if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
@@ -39,6 +39,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
+    // Handle Extra Images Upload
+    if (!empty($_FILES['more_images']['name'][0])) {
+        $target_dir = "../uploads/";
+        foreach ($_FILES['more_images']['name'] as $key => $img_name) {
+            if ($_FILES['more_images']['error'][$key] == 0) {
+                $tmp_name = $_FILES['more_images']['tmp_name'][$key];
+                $new_name = time() . "_extra_edit_" . basename($img_name);
+                $target_file = $target_dir . $new_name;
+                if (move_uploaded_file($tmp_name, $target_file)) {
+                    $extra_image_path = "uploads/" . $new_name;
+                    $stmtImg = $conn->prepare("INSERT INTO pg_images (pg_id, image_path) VALUES (?, ?)");
+                    $stmtImg->execute([$pg_id, $extra_image_path]);
+                }
+            }
+        }
+    }
+
+    // Handle Image Deletion
+    if (!empty($_POST['delete_images'])) {
+        foreach ($_POST['delete_images'] as $img_id) {
+            $stmtDel = $conn->prepare("DELETE FROM pg_images WHERE id = ? AND pg_id = ?");
+            $stmtDel->execute([$img_id, $pg_id]);
+        }
+    }
+
     $stmtUpdate = $conn->prepare("UPDATE pg_listings SET name=?, city=?, address=?, description=?, rules=?, amenities=?, rent=?, deposit=?, total_beds=? WHERE id=?");
     if ($stmtUpdate->execute([$name, $city, $address, $description, $rules, $amenities, $rent, $deposit, $total_beds, $pg_id])) {
         header("Location: dashboard.php");
@@ -47,6 +72,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $error = "UPDATE FAILED. RETRY.";
     }
 }
+
+// Fetch Extra Images
+$stmtImages = $conn->prepare("SELECT * FROM pg_images WHERE pg_id = ?");
+$stmtImages->execute([$pg_id]);
+$extra_images = $stmtImages->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -73,15 +103,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <?php endif; ?>
 
                     <form method="POST" enctype="multipart/form-data">
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">UPDATE VISUAL INTEL</label>
-                            <input type="file" name="image" class="form-control" accept="image/*">
-                            <?php if ($pg['image']): ?>
-                                <div class="mt-2 p-2 bg-light border-brutal d-inline-block">
-                                    <small class="fw-bold">CURRENT INTEL: <a href="../<?php echo htmlspecialchars($pg['image']); ?>" target="_blank" class="text-brutal-red">VIEW FILE</a></small>
-                                </div>
-                            <?php endif; ?>
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">UPDATE MAIN IMAGE</label>
+                                <input type="file" name="image" class="form-control" accept="image/*">
+                                <?php if ($pg['image']): ?>
+                                    <div class="mt-2 p-2 bg-light border-brutal d-inline-block">
+                                        <small class="fw-bold">CURRENT: <a href="../<?php echo htmlspecialchars($pg['image']); ?>" target="_blank" class="text-brutal-red">VIEW</a></small>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">ADD MORE IMAGES</label>
+                                <input type="file" name="more_images[]" class="form-control" accept="image/*" multiple>
+                            </div>
                         </div>
+
+                        <?php if (!empty($extra_images)): ?>
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">MANAGE EXTRA IMAGES (CHECK TO DELETE)</label>
+                                <div class="row g-2">
+                                    <?php foreach ($extra_images as $img): ?>
+                                        <div class="col-3">
+                                            <div class="brutal-card p-1 position-relative">
+                                                <img src="../<?php echo $img['image_path']; ?>" class="img-fluid" style="height: 100px; object-fit: cover;">
+                                                <div class="form-check mt-1">
+                                                    <input class="form-check-input" type="checkbox" name="delete_images[]" value="<?php echo $img['id']; ?>">
+                                                    <label class="form-check-label small fw-bold">DELETE</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
 
                         <div class="mb-4">
                             <label class="form-label fw-bold">PROPERTY DESIGNATION</label>

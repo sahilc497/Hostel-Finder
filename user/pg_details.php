@@ -11,7 +11,12 @@ $stmt = $conn->prepare("SELECT p.*, u.name as owner_name, u.phone as owner_phone
 $stmt->execute([$pg_id]);
 $pg = $stmt->fetch();
 
-if (!$pg) die("PG not found.");
+if (!$pg) die("Listing not found.");
+
+// Fetch Additional Images
+$stmtImages = $conn->prepare("SELECT image_path FROM pg_images WHERE pg_id = ?");
+$stmtImages->execute([$pg_id]);
+$extra_images = $stmtImages->fetchAll(PDO::FETCH_COLUMN);
 
 // Check if user already has a booking
 if (isset($_SESSION['user_id'])) {
@@ -28,7 +33,7 @@ if (isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo strtoupper(htmlspecialchars($pg['name'])); ?> - INTEL - STUDENTNEST</title>
+    <title><?php echo strtoupper(htmlspecialchars($pg['name'])); ?> - INTEL - HOSTEL/PG FINDER</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -47,7 +52,30 @@ if (isset($_SESSION['user_id'])) {
             <!-- Left Column -->
             <div class="col-md-8">
                 <div class="brutal-card p-0 overflow-hidden">
-                    <img src="<?php echo $pg['image'] ? '../' . $pg['image'] : 'https://via.placeholder.com/800x400?text=BASE+DETECTED'; ?>" class="pg-image-brutal" alt="PG Image">
+                    <?php if (empty($extra_images)): ?>
+                        <img src="<?php echo $pg['image'] ? '../' . $pg['image'] : 'https://via.placeholder.com/800x400?text=BASE+DETECTED'; ?>" class="pg-image-brutal" alt="PG Image">
+                    <?php else: ?>
+                        <div id="pgCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                <div class="carousel-item active" data-bs-interval="3000">
+                                    <img src="<?php echo '../' . $pg['image']; ?>" class="d-block w-100 pg-image-brutal" alt="Main Image">
+                                </div>
+                                <?php foreach($extra_images as $img): ?>
+                                    <div class="carousel-item" data-bs-interval="3000">
+                                        <img src="<?php echo '../' . $img; ?>" class="d-block w-100 pg-image-brutal" alt="Additional Image">
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#pgCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon bg-dark border-brutal" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#pgCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon bg-dark border-brutal" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+                    <?php endif; ?>
                     <div class="p-4 p-lg-5">
                         <div class="d-flex justify-content-between align-items-start mb-4">
                             <div>

@@ -20,6 +20,7 @@ $path_prefix = (basename(dirname($_SERVER['PHP_SELF'])) == 'hf') ? '' : '../';
                     if ($_SESSION['role'] == 'admin') $dash = $path_prefix . 'admin/dashboard.php';
                     ?>
                     <li class="nav-item"><a class="nav-link" href="<?php echo $dash; ?>">DASHBOARD</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?php echo $path_prefix . ($_SESSION['role'] == 'owner' ? 'owner' : 'user'); ?>/profile.php">PROFILE</a></li>
                     <li class="nav-item ms-lg-3"><a class="btn btn-brutal btn-sm" href="<?php echo $path_prefix; ?>auth/logout.php">LOGOUT</a></li>
                 <?php else: ?>
                     <li class="nav-item"><a class="nav-link" href="<?php echo $path_prefix; ?>auth/admin_login.php"><i class="fa fa-lock-open me-1"></i>ADMIN</a></li>

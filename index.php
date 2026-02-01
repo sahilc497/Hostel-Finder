@@ -97,8 +97,8 @@ try {
         <div class="row g-5 mt-5 align-items-center" id="about">
             <div class="col-md-7">
                 <h2 class="display-3 border-bottom border-5 border-dark pb-2 mb-4">BRIEFING</h2>
-                <p class="fs-4 fw-bold">WE ELIMINATE THE FRICTION IN STUDENT LIVING.</p>
-                <p class="fs-5">STUDENTNEST CONNECTS OPERATORS (OWNERS) WITH TARGETS (STUDENTS) THROUGH A VERIFIED INTEL NETWORK. NO MIDDLEMEN. NO TRAPS.</p>
+                <p class="fs-4 fw-bold">WE ELIMINATE THE FRICTION IN HOUSING FOR EVERYONE.</p>
+                <p class="fs-5">HOSTEL/PG FINDER CONNECTS OPERATORS (OWNERS) WITH TARGETS (STUDENTS & BACHELORS) THROUGH A VERIFIED INTEL NETWORK. NO MIDDLEMEN. NO TRAPS.</p>
                 
                 <div class="row g-4 mt-2">
                     <div class="col-6">
