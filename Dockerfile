@@ -26,13 +26,11 @@ RUN mkdir -p /var/www/html/uploads \
     && chmod -R 755 /var/www/html \
     && chmod -R 777 /var/www/html/uploads
 
-# Railway dynamically assigns PORT — Apache must listen on it
-# Default to 80 for local Docker usage
-ARG PORT=80
-ENV PORT=${PORT}
-RUN sed -i "s/Listen 80/Listen \${PORT}/" /etc/apache2/ports.conf \
-    && sed -i "s/<VirtualHost \*:80>/<VirtualHost *:\${PORT}>/" /etc/apache2/sites-available/000-default.conf
+# Heroku & Railway both inject PORT dynamically at runtime
+# Use a startup script so Apache reads $PORT at container start
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-EXPOSE ${PORT}
+EXPOSE 80
 
-CMD ["apache2-foreground"]
+CMD ["/usr/local/bin/docker-entrypoint.sh"]
