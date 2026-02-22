@@ -1,5 +1,5 @@
-# Database configuration
-config/database.php
+# Database configuration is now safe to commit (uses env vars only)
+# config/database.php  <-- intentionally unblocked
 
 # Uploaded images
 uploads/*
