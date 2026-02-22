@@ -1,3 +1,13 @@
 Options -Indexes
-ErrorDocument 403 /hf/index.php
-ErrorDocument 404 /hf/index.php
+
+# Remove /hf/ prefix — Railway serves from web root /
+ErrorDocument 403 /index.php
+ErrorDocument 404 /index.php
+
+# Enable URL rewriting
+RewriteEngine On
+
+# Redirect to index.php for unmatched requests (excluding real files/dirs)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]
